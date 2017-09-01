@@ -32,17 +32,17 @@ func (g *GitHubClient) updateLabels(repo *config.Repository, labels []*config.La
 			continue
 		}
 
-		if existing.Color == label.Color {
-			// fmt.Printf("%s up-to-date, nothing to do!\n", label.Name)
-			continue
-		}
-
 		if existing == nil {
 			fmt.Printf("%s not found, creating!\n", label.Name)
 			err := g.createLabel(repo, label)
 			if err != nil {
 				return err
 			}
+			continue
+		}
+
+		if existing.Color == label.Color {
+			// fmt.Printf("%s up-to-date, nothing to do!\n", label.Name)
 			continue
 		}
 

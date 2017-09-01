@@ -1,36 +1,44 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
+	"path"
 
 	"github.com/hairyhenderson/github-sync-labels-milestones/config"
 	"github.com/hairyhenderson/github-sync-labels-milestones/sync"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var cachePath string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "github-sync-labels-milestones",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	Use:   os.Args[0],
+	Short: "Manage labels and milestones across many repos",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := config.ParseFile("config.json")
+		if len(args) == 0 {
+			log.Printf("no config file specified - defaulting to 'config.json'\n")
+			args = []string{"config.json"}
+		} else if len(args) > 1 {
+			log.Printf("error: too many arguments specified - provide only the config filename (%+v)\n", args)
+			return errors.New("too many args")
+		}
+		cachePath, err := homedir.Expand(viper.GetString("cache"))
 		if err != nil {
 			return err
 		}
-		sync.Sync(c)
-		return nil
+		c, err := config.ParseFile(args[0])
+		if err != nil {
+			return err
+		}
+
+		err = sync.Sync(cachePath, c)
+		return err
 	},
 }
 
@@ -44,30 +52,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.github-sync-labels-milestones.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
-	}
-
-	viper.SetConfigName(".github-sync-labels-milestones") // name of config file (without extension)
-	viper.AddConfigPath(os.Getenv("HOME"))                // adding home directory as first search path
-	viper.AutomaticEnv()                                  // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	defaultCache := path.Join("~", "."+path.Base(os.Args[0]), "cache")
+	RootCmd.Flags().StringP("cache", "", defaultCache, "path to HTTP cache")
+	viper.BindPFlag("cache", RootCmd.Flags().Lookup("cache"))
 }

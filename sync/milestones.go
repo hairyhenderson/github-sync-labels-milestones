@@ -2,21 +2,11 @@ package sync
 
 import (
 	"fmt"
-	"net/http"
-	"os"
 
 	"github.com/hairyhenderson/github-sync-labels-milestones/config"
 
 	"github.com/google/go-github/github"
-	"github.com/gregjones/httpcache"
-	"github.com/gregjones/httpcache/diskcache"
-	"golang.org/x/oauth2"
 )
-
-// GitHubClient -
-type GitHubClient struct {
-	client *github.Client
-}
 
 func (g *GitHubClient) updateMilestones(repo *config.Repository, milestones []*config.Milestone) error {
 	openMSes, err := g.getAllMilestones(repo, "open")
@@ -154,25 +144,4 @@ func (g *GitHubClient) updateMilestone(repo *config.Repository, ms *config.Miles
 	}
 	fmt.Printf("edited milestone: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
-}
-
-// NewGitHubClient - creates a client, authenticated by OAuth2 via a static token
-func NewGitHubClient() *GitHubClient {
-	token := os.Getenv("GH_SYNC_TOKEN")
-	fmt.Printf("GH Token is %s\n", token)
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-
-	c := diskcache.New(".cache")
-	t := httpcache.NewTransport(c)
-	hc := &http.Client{
-		Transport: &oauth2.Transport{
-			Base:   t,
-			Source: ts,
-		},
-	}
-	client := github.NewClient(hc)
-
-	return &GitHubClient{client: client}
 }
