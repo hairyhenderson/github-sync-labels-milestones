@@ -101,29 +101,35 @@ func (g *GitHubClient) searchLabels(label *config.Label, labels []*config.Label)
 
 func (g *GitHubClient) createLabel(repo *config.Repository, label *config.Label) error {
 	l := &github.Label{Name: &label.Name, Color: &label.Color}
-	_, resp, err := g.client.Issues.CreateLabel(repo.User, repo.Repo, l)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		_, resp, err := g.client.Issues.CreateLabel(repo.User, repo.Repo, l)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("create label: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("create label: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }
 
 func (g *GitHubClient) deleteLabel(repo *config.Repository, label *config.Label) error {
-	resp, err := g.client.Issues.DeleteLabel(repo.User, repo.Repo, label.Name)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		resp, err := g.client.Issues.DeleteLabel(repo.User, repo.Repo, label.Name)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("delete label: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("delete label: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }
 
 func (g *GitHubClient) updateLabel(repo *config.Repository, label *config.Label) error {
 	l := &github.Label{Name: &label.Name, Color: &label.Color}
-	_, resp, err := g.client.Issues.EditLabel(repo.User, repo.Repo, label.Name, l)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		_, resp, err := g.client.Issues.EditLabel(repo.User, repo.Repo, label.Name, l)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("edited label: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("edited label: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }

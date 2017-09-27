@@ -32,12 +32,18 @@ var RootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		opts := sync.Options{
+			DryRun:    viper.GetBool("dry-run"),
+			NoCache:   viper.GetBool("no-cache"),
+			CachePath: cachePath,
+		}
+
 		c, err := config.ParseFile(args[0])
 		if err != nil {
 			return err
 		}
 
-		err = sync.Sync(cachePath, c)
+		err = sync.Sync(c, opts)
 		return err
 	},
 }
@@ -55,4 +61,10 @@ func init() {
 	defaultCache := path.Join("~", "."+path.Base(os.Args[0]), "cache")
 	RootCmd.Flags().StringP("cache", "", defaultCache, "path to HTTP cache")
 	viper.BindPFlag("cache", RootCmd.Flags().Lookup("cache"))
+
+	RootCmd.Flags().BoolP("no-cache", "", false, "bypass HTTP caching")
+	viper.BindPFlag("no-cache", RootCmd.Flags().Lookup("no-cache"))
+
+	RootCmd.Flags().BoolP("dry-run", "", false, "do not alter the remote GitHub resources, but show what would be done")
+	viper.BindPFlag("dry-run", RootCmd.Flags().Lookup("dry-run"))
 }

@@ -24,7 +24,7 @@ func (g *GitHubClient) updateMilestones(repo *config.Repository, milestones []*c
 	// 3. for each _given_ MS:
 	for _, ms := range milestones {
 		// 3.1. is this MS in (1+2)? (include Title + PreviousTitles in search)
-		existingMS, err := g.searchMS(ms, existingMSes)
+		existingMS, err := searchMS(ms, existingMSes)
 		if err != nil {
 			return err
 		}
@@ -85,14 +85,12 @@ func (g *GitHubClient) getAllMilestones(repo *config.Repository, state string) (
 	return ms, nil
 }
 
-func (g *GitHubClient) searchMS(ms *config.Milestone, milestones []*config.Milestone) (*config.Milestone, error) {
+func searchMS(ms *config.Milestone, milestones []*config.Milestone) (*config.Milestone, error) {
 	found := []*config.Milestone{}
+	titles := append(ms.PreviousTitles, ms.Title)
 	for _, m := range milestones {
-		if ms.Title == m.Title {
-			found = append(found, m)
-		}
-		for _, t := range m.PreviousTitles {
-			if ms.Title == t {
+		for _, t := range titles {
+			if m.Title == t {
 				found = append(found, m)
 			}
 		}
@@ -114,20 +112,24 @@ func (g *GitHubClient) createMilestone(repo *config.Repository, ms *config.Miles
 		Description: &ms.Description,
 		DueOn:       &ms.DueOn,
 	}
-	_, resp, err := g.client.Issues.CreateMilestone(repo.User, repo.Repo, m)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		_, resp, err := g.client.Issues.CreateMilestone(repo.User, repo.Repo, m)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("create milestone: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("create milestone: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }
 
 func (g *GitHubClient) deleteMilestone(repo *config.Repository, ms *config.Milestone) error {
-	resp, err := g.client.Issues.DeleteMilestone(repo.User, repo.Repo, ms.Number)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		resp, err := g.client.Issues.DeleteMilestone(repo.User, repo.Repo, ms.Number)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("delete milestone: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("delete milestone: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }
 
@@ -138,10 +140,12 @@ func (g *GitHubClient) updateMilestone(repo *config.Repository, ms *config.Miles
 		Description: &ms.Description,
 		DueOn:       &ms.DueOn,
 	}
-	_, resp, err := g.client.Issues.EditMilestone(repo.User, repo.Repo, ms.Number, m)
-	if err != nil {
-		return err
+	if !g.dryRun {
+		_, resp, err := g.client.Issues.EditMilestone(repo.User, repo.Repo, ms.Number, m)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("edited milestone: %d (%+v)\n", resp.StatusCode, resp)
 	}
-	fmt.Printf("edited milestone: %d (%+v)\n", resp.StatusCode, resp)
 	return nil
 }

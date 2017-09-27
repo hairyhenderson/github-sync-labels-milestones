@@ -36,26 +36,6 @@ func TestMilestoneEquals(t *testing.T) {
 	right = &Milestone{State: "closed"}
 	assert.False(t, left.Equals(right))
 
-	left = &Milestone{PreviousTitles: nil}
-	right = &Milestone{PreviousTitles: nil}
-	assert.True(t, left.Equals(right))
-
-	left = &Milestone{PreviousTitles: []string{}}
-	right = &Milestone{PreviousTitles: []string{}}
-	assert.True(t, left.Equals(right))
-
-	left = &Milestone{PreviousTitles: []string{"foo"}}
-	right = &Milestone{PreviousTitles: []string{}}
-	assert.False(t, left.Equals(right))
-
-	left = &Milestone{PreviousTitles: []string{"foo", "bar", "baz"}}
-	right = &Milestone{PreviousTitles: []string{"bar", "foo", "baz"}}
-	assert.True(t, left.Equals(right))
-
-	left = &Milestone{PreviousTitles: []string{"foo", "bar", "baz"}}
-	right = &Milestone{PreviousTitles: []string{"bar", "foo", "qux"}}
-	assert.False(t, left.Equals(right))
-
 	left = &Milestone{Number: 0}
 	right = &Milestone{Number: 0}
 	assert.True(t, left.Equals(right))

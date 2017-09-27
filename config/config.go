@@ -78,20 +78,6 @@ func (m *Milestone) Equals(o *Milestone) bool {
 	if o.Description != m.Description {
 		return false
 	}
-	if len(o.PreviousTitles) != len(m.PreviousTitles) {
-		return false
-	}
-	for _, ot := range o.PreviousTitles {
-		found := false
-		for _, mt := range m.PreviousTitles {
-			if ot == mt {
-				found = true
-			}
-		}
-		if !found {
-			return false
-		}
-	}
 	if o.Number != m.Number {
 		return false
 	}
